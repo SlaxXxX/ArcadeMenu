@@ -58,9 +58,9 @@ public class ArcadeMenu extends Application {
 		games.keySet().forEach(System.out::println);
 		games.values().forEach(asset -> System.out.println(asset.file + " // " + asset.picture));
 
-		// Media music = new Media(dataFolder.toURI().toString() + "/Music.mp3");
-		// MediaPlayer player = new MediaPlayer(music);
-		// player.play();
+		 Media music = new Media(dataFolder.toURI().toString() + "/Music.mp3");
+		 MediaPlayer player = new MediaPlayer(music);
+		 player.play();
 	}
 
 	private String strip(String s) {
@@ -122,7 +122,7 @@ public class ArcadeMenu extends Application {
 			ArrayList<String> keys = new ArrayList<>(games.keySet());
 			System.out.println(gamesFolder + "\\\"" + keys.get(menuIndex) + "\"");
 			try {
-				Runtime.getRuntime().exec("cmd /c start " + gamesFolder + "\\\"" + keys.get(menuIndex) + "\"");
+				Runtime.getRuntime().exec("cmd /c start \"\" \"" + gamesFolder + "\\" + games.get(keys.get(menuIndex)).file + "\"");
 			} catch (Exception ex) {
 			}
 		}
