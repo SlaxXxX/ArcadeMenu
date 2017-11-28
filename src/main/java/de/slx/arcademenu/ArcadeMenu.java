@@ -2,33 +2,45 @@ package de.slx.arcademenu;
 
 import javafx.application.Application;
 import javafx.scene.Cursor;
-import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.VBox;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
+import javafx.scene.layout.StackPane;
+import javafx.scene.shape.ArcTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+import javafx.scene.image.ImageView;
+import javafx.animation.PathTransition;
+import javafx.scene.*;
+import javafx.event.*;
 
+import java.awt.Dimension;
+import java.awt.Point;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("restriction")
 public class ArcadeMenu extends Application {
 
 	File mainFolder, dataFolder, gamesFolder;
-	SortedMap<String, Assets> games = new TreeMap<>();
-	int menuIndex = 0;
-	GraphicsContext gc;
+	ArrayList<Element> games = new ArrayList<>();
+	StackPane layout;
+
+	int[] angles = new int[] { 7, 19, 37, 55, 67, 79 };
+	int removeElement = -1;
+	int elementCount = 6;
+
+	int delay = 1000;
+	int climbingDelay = delay;
+	double climbSpeed = 0.98;
+	int minDelay = 40;
+
+	final Dimension d = new Dimension(1024, 768);
+	final int radius = (int) (d.width / 4 * 2.5);
 
 	public static void main(String[] args) {
 		launch(args);
@@ -48,19 +60,19 @@ public class ArcadeMenu extends Application {
 		for (File file : gamesFolder.listFiles()) {
 			String name = file.getName();
 			if (name.endsWith(".url") || name.endsWith(".lnk"))
-				games.put(strip(name), new Assets(name));
+				games.add(new Element(name));
 		}
 		for (File file : gamesFolder.listFiles()) {
 			String name = file.getName();
 			if (name.endsWith(".png") || name.endsWith(".jpg"))
-				games.get(strip(name)).putPicture(name);
+				games.stream().filter(el -> el.name.equals(strip(name))).forEach(el -> el.putPicture(name));
 		}
-		games.keySet().forEach(System.out::println);
-		games.values().forEach(asset -> System.out.println(asset.file + " // " + asset.picture));
 
-		 Media music = new Media(dataFolder.toURI().toString() + "/Music.mp3");
-		 MediaPlayer player = new MediaPlayer(music);
-		 player.play();
+		games.removeAll(games.stream().filter(game -> game.image == null).collect(Collectors.toList()));
+
+		//		 Media music = new Media(dataFolder.toURI().toString() + "/Music.mp3");
+		//		 MediaPlayer player = new MediaPlayer(music);
+		//		 player.play();
 	}
 
 	private String strip(String s) {
@@ -69,74 +81,69 @@ public class ArcadeMenu extends Application {
 
 	@Override
 	public void start(Stage stage) {
-		Canvas canvas = new Canvas(1024, 768);
-		gc = canvas.getGraphicsContext2D();
-		drawImage(0);
+		layout = new StackPane();
+		int oldSize = games.size();
+		for (int i = oldSize; i < elementCount; i++)
+			games.add(new Element(games.get(i % oldSize)));
+		games.forEach(element -> layout.getChildren().add(element.image));
 
-		Group root = new Group();
-		VBox vBox = new VBox();
-		vBox.getChildren().addAll(canvas);
-		root.getChildren().add(vBox);
-		Scene scene = new Scene(root, 1024, 768);
+		Scene scene = new Scene(layout, d.width, d.height);
 		scene.setCursor(Cursor.NONE);
-
 		scene.addEventFilter(KeyEvent.KEY_PRESSED, this::pressedKey);
-
+		scene.setOnKeyReleased(ke -> {
+			climbingDelay = delay;
+		});
 		stage.setScene(scene);
+
 		// stage.setFullScreen(true);
-		stage.setFullScreenExitHint("");
+		// stage.setFullScreenExitHint("");
 		// stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
 		// stage.setOnCloseRequest(Event::consume);
 		stage.show();
+		for (int i = 0; i < games.size(); i++) {
+			games.get((i + games.size() - 2) % games.size()).image.relocate(radius, d.height + games.get(i).image.getFitHeight() / 2);
+			if (i < elementCount)
+				games.get((i + games.size() - 2) % games.size()).setPath(i, i * 150, 1000);
+		}
 	}
 
-	private void drawImage(int direction) {
-		long time = System.currentTimeMillis();
-		for (int l=0;l<Math.abs(direction);l++) {
-		gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
-		ArrayList<String> keys = new ArrayList<>(games.keySet());
-		int pointer = menuIndex;
-		int xPos = 120;
-		int size = 200;
-		gc.setFont(Font.font("Arial", 30));
-		for (int i = 0; i < 5; i++) {
-			if (pointer < 0)
-				pointer += keys.size();
-			if (pointer > keys.size() - 1)
-				pointer -= keys.size();
-			gc.drawImage(games.get(keys.get(pointer)).image, 50, xPos, size, size);
-			gc.fillText(keys.get(pointer), size + 60, xPos + 10 + gc.getFont().getSize());
-			gc.setFont(Font.font("Arial", 20));
-			xPos += size + 10;
-			size = 100;
-			pointer++;
-		}
-		gc.drawImage(games.get(keys.get(menuIndex > 0 ? menuIndex - 1 : menuIndex + keys.size() - 1)).image, 50, 10, 100, 100);
-		gc.fillText(keys.get(menuIndex > 0 ? menuIndex - 1 : menuIndex + keys.size() - 1), size + 60, 20 + gc.getFont().getSize());
-		}
-		System.out.println(System.currentTimeMillis() - time);
+	private int add(int num, int add, int max) {
+		num += add;
+		if (num > max)
+			num -= max;
+		if (num < 0)
+			num += max;
+		return num;
 	}
 
 	private void pressedKey(KeyEvent e) {
 		if (e.getCode() == KeyCode.ENTER) {
-			ArrayList<String> keys = new ArrayList<>(games.keySet());
-			System.out.println(gamesFolder + "\\\"" + keys.get(menuIndex) + "\"");
 			try {
-				Runtime.getRuntime().exec("cmd /c start \"\" \"" + gamesFolder + "\\" + games.get(keys.get(menuIndex)).file + "\"");
+				Runtime.getRuntime().exec("cmd /c start \"\" \"" + gamesFolder + "\\" + games.get(0).file + "\"");
 			} catch (Exception ex) {
 			}
 		}
-		if (e.getCode() == KeyCode.UP) {
-			menuIndex--;
-			if (menuIndex < 0)
-				menuIndex += games.size();
-			drawImage(-1);
+		if (e.getCode() == KeyCode.UP && removeElement == -1) {
+			removeElement = 0;
+			games.add(new Element(games.get(0)));
+			layout.getChildren().add(games.get(games.size() - 1).image);
+			games.get(games.size() - 1).image.relocate(radius, d.height + games.get(games.size() - 1).image.getFitHeight() / 2);
+			for (int i = 0; i < elementCount; i++) {
+				games.get((i + elementCount - 2) % elementCount).setPath(i, 0, climbingDelay);
+			}
+			if (climbingDelay > minDelay)
+				climbingDelay *= climbSpeed;
 		}
-		if (e.getCode() == KeyCode.DOWN) {
-			menuIndex++;
-			if (menuIndex > games.size() - 1)
-				menuIndex -= games.size();
-			drawImage(1);
+		if (e.getCode() == KeyCode.DOWN && removeElement == -1) {
+			removeElement = games.size();
+			games.add(0, new Element(games.get(games.size() - 1)));
+			layout.getChildren().add(games.get(0).image);
+			games.get(0).image.relocate(0, radius + games.get(0).image.getFitHeight() / 2);
+			for (int i = 0; i < elementCount; i++) {
+				games.get((i + elementCount - 2) % elementCount).setPath(i, 0, climbingDelay);
+			}
+			if (climbingDelay > minDelay)
+				climbingDelay *= climbSpeed;
 		}
 	}
 
@@ -144,21 +151,78 @@ public class ArcadeMenu extends Application {
 	public void stop() {
 	}
 
-	private class Assets {
+	private class Element {
 		private String picture;
-		private Image image;
+		private ImageView image;
 		private String file;
+		private String name;
+		private PathTransition path;
 
-		private Assets(String file) {
+		private Element(String file) {
 			this.file = file;
+			name = strip(file);
 		}
 
-		private void putPicture(String pic) {
-			picture = pic;
-			System.out.println(gamesFolder.toURI().getPath() + picture);
+		private Element(Element element) {
+			this.file = element.file;
+			name = element.name;
+			putPicture(element.picture);
+		}
+
+		private void putPicture(String picture) {
+			this.picture = picture;
+			//System.out.println(gamesFolder.toURI().getPath() + picture);
 			try {
-				image = new Image("file:" + gamesFolder.toURI().getPath() + picture);
-			} catch (Exception e) {}
+				image = new ImageView("file:" + gamesFolder.toURI().getPath() + picture);
+				image.setFitHeight(100);
+				image.setFitWidth(100);
+			} catch (Exception e) {
+			}
+		}
+
+		private Point getPos(Node node) {
+			return new Point((int) (node.getLayoutX() + node.getTranslateX()), (int) (node.getLayoutY() + node.getTranslateY()));
+		}
+
+		private Point getDelta(ImageView image, int pos) {
+			Point middle = new Point(getPos(image).x - radius, getPos(image).y);
+			Point stop = new Point(middle.x + (int) (radius * Math.cos(Math.toRadians(270) + Math.toRadians(angles[pos]))), middle.y + (int) (radius * Math.sin(Math.toRadians(270) + Math.toRadians(angles[pos]))));
+			return new Point(stop.x - getPos(image).x, stop.y - getPos(image).y);
+		}
+
+		private void setPath(int pos, int delay, int duration) {
+			PathTransition pathTransition = new PathTransition();
+
+			Path path = new Path();
+			Point delta = getDelta(image, pos);
+			path.getElements().add(new MoveTo(image.getTranslateX() + image.getFitWidth() / 2, image.getTranslateY() + image.getFitHeight() / 2));
+
+			ArcTo arcTo = new ArcTo(radius, radius,
+					0, delta.x, delta.y, false, false);
+
+			path.getElements().add(arcTo);
+
+			pathTransition.setDelay(Duration.millis(delay));
+			pathTransition.setDuration(Duration.millis(duration));
+			pathTransition.setNode(image);
+			pathTransition.setPath(path);
+
+			pathTransition.setOnFinished(new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event) {
+					if (removeElement != -1) {
+						games.remove(removeElement);
+						removeElement = -1;
+					}
+					if (event.getSource() instanceof PathTransition) {
+						PathTransition source = (PathTransition) event.getSource();
+						Node node = source.getNode();
+						System.out.println(node.getLayoutX() + " / " + node.getTranslateX() + " || " + node.getLayoutY() + " / " + node.getTranslateY());
+					}
+				}
+			});
+
+			pathTransition.play();
 		}
 	}
 }
