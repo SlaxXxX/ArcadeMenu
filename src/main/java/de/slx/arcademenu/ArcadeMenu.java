@@ -56,6 +56,7 @@ public class ArcadeMenu extends Application {
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
+		System.out.println(gamesFolder);
 
 		for (File file : gamesFolder.listFiles()) {
 			String name = file.getName();
