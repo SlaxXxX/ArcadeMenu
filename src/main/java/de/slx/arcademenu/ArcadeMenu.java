@@ -22,6 +22,9 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import javafx.event.*;
+import javafx.scene.input.*;
+
 @SuppressWarnings("restriction")
 public class ArcadeMenu extends Application {
 
@@ -46,8 +49,8 @@ public class ArcadeMenu extends Application {
 
 	ScaleTransition upscaleTransition = new ScaleTransition();
 	ScaleTransition downscaleTransition = new ScaleTransition();
-    FadeTransition fadeinTransition = new FadeTransition();
-    FadeTransition fadeoutTransition = new FadeTransition();
+	FadeTransition fadeinTransition = new FadeTransition();
+	FadeTransition fadeoutTransition = new FadeTransition();
 
 	public static void main(String[] args) {
 		launch(args);
@@ -82,7 +85,6 @@ public class ArcadeMenu extends Application {
 		//		 MediaPlayer player = new MediaPlayer(music);
 		//		 player.play();
 
-
 		fadeinTransition.setFromValue(0.0);
 		fadeinTransition.setToValue(1.0);
 		fadeoutTransition.setFromValue(1.0);
@@ -115,17 +117,17 @@ public class ArcadeMenu extends Application {
 		}
 
 		Scene scene = new Scene(layout, d.width, d.height);
-		//		scene.setCursor(Cursor.NONE);
+
 		scene.addEventFilter(KeyEvent.KEY_PRESSED, this::pressedKey);
 		scene.setOnKeyReleased(ke -> {
 			climbingDuration = duration;
 		});
 		stage.setScene(scene);
-
-		// stage.setFullScreen(true);
-		// stage.setFullScreenExitHint("");
-		// stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
-		// stage.setOnCloseRequest(Event::consume);
+		scene.setCursor(Cursor.NONE);
+		//		 stage.setFullScreen(true);
+		stage.setFullScreenExitHint("");
+		stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
+		stage.setOnCloseRequest(Event::consume);
 		stage.show();
 
 		games.get(getIndex(3)).scale = 1.8;
@@ -165,7 +167,6 @@ public class ArcadeMenu extends Application {
 			games.get(getIndex(3)).scale = 1.8;
 			games.get(getIndex(4)).scale = 1.0;
 
-			
 			games.get(getIndex(0)).setPath(0, 0, climbingDuration, new Point(-imageSize / 2, (int) (d.height + imageSize / 2 - radius)));
 			for (int i = 1; i < elementCount; i++) {
 				games.get(getIndex(i)).setPath(i % elementCount, 0, climbingDuration);
