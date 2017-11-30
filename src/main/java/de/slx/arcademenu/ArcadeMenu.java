@@ -1,6 +1,7 @@
 package de.slx.arcademenu;
 
 import javafx.application.Application;
+import javafx.beans.value.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
@@ -22,6 +23,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import javafx.scene.media.*;
 import javafx.event.*;
 import javafx.scene.input.*;
 
@@ -46,6 +48,10 @@ public class ArcadeMenu extends Application {
 
 	final Dimension d = new Dimension(1024, 768);
 	final int radius = (int) (d.width / 4 * 2.5);
+
+//	Media start = new Media(dataFolder.toURI().toString() + "/Start.mp3");
+//	Media loop = new Media(dataFolder.toURI().toString() + "/Loop.mp3");
+//	MediaPlayer player = new MediaPlayer(start);
 
 	public static void main(String[] args) {
 		launch(args);
@@ -76,9 +82,13 @@ public class ArcadeMenu extends Application {
 
 		games.removeAll(games.stream().filter(game -> game.image == null).collect(Collectors.toList()));
 
-		//		 Media music = new Media(dataFolder.toURI().toString() + "/Music.mp3");
-		//		 MediaPlayer player = new MediaPlayer(music);
-		//		 player.play();
+//		player.setOnEndOfMedia(new Runnable() {
+//			public void run() {
+//				player = new MediaPlayer(loop);
+//				player.play();
+//			}
+//		});
+//		player.play();
 
 	}
 
@@ -92,7 +102,7 @@ public class ArcadeMenu extends Application {
 
 		ArrayList<Element> initialList = new ArrayList<>(games);
 		while (games.size() < elementCount)
-			for(Element game : initialList)
+			for (Element game : initialList)
 				games.add(new Element(game));
 
 		for (Element game : games) {
@@ -107,12 +117,23 @@ public class ArcadeMenu extends Application {
 		scene.setOnKeyReleased(ke -> {
 			climbingDuration = duration;
 		});
+
 		stage.setScene(scene);
 		//		scene.setCursor(Cursor.NONE);
 		//		 stage.setFullScreen(true);
 		stage.setFullScreenExitHint("");
 		stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
 		//		stage.setOnCloseRequest(Event::consume);
+//		stage.focusedProperty().addListener(new ChangeListener<Boolean>() {
+//			@Override
+//			public void changed(ObservableValue<? extends Boolean> ov, Boolean t, Boolean t1) {
+//				if (t1)
+//					player.play();
+//				else
+//					player.pause();
+//			}
+//		});
+
 		stage.show();
 
 		games.get(getIndex(3)).scale = 1.8;
@@ -190,7 +211,7 @@ public class ArcadeMenu extends Application {
 	//-------------------------------------------------------------------------------------//
 	//-------------------------------------------------------------------------------------//
 	//-------------------------------------------------------------------------------------//
-	
+
 	private class Element {
 
 		ScaleTransition upscaleTransition = new ScaleTransition();
@@ -253,14 +274,14 @@ public class ArcadeMenu extends Application {
 			upscaleTransition.setNode(group);
 			downscaleTransition.setNode(group);
 		}
-		
+
 		private void up(int duration) {
 			upscaleTransition.setDuration(Duration.millis(duration));
 			upscaleTransition.play();
 			fadeinTransition.setDuration(Duration.millis(duration));
 			fadeinTransition.play();
 		}
-		
+
 		private void down(int duration) {
 			downscaleTransition.setDuration(Duration.millis(duration));
 			downscaleTransition.play();
