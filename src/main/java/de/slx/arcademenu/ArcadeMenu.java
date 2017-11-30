@@ -17,12 +17,17 @@ import javafx.scene.*;
 import javafx.scene.control.*;
 
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import javax.imageio.ImageIO;
+
+import javafx.embed.swing.*;
 import javafx.scene.media.*;
 import javafx.event.*;
 import javafx.scene.input.*;
@@ -44,14 +49,15 @@ public class ArcadeMenu extends Application {
 	double climbSpeed = 0.97;
 	int minDelay = 30;
 	double scaleMain = 1.8;
-	int imageSize = 100;
+	int imageSize = 90;
+	int frameWidth = 10;
 
 	final Dimension d = new Dimension(1024, 768);
 	final int radius = (int) (d.width / 4 * 2.5);
 
-//	Media start = new Media(dataFolder.toURI().toString() + "/Start.mp3");
-//	Media loop = new Media(dataFolder.toURI().toString() + "/Loop.mp3");
-//	MediaPlayer player = new MediaPlayer(start);
+	//	Media start = new Media(dataFolder.toURI().toString() + "/Start.mp3");
+	//	Media loop = new Media(dataFolder.toURI().toString() + "/Loop.mp3");
+	//	MediaPlayer player = new MediaPlayer(start);
 
 	public static void main(String[] args) {
 		launch(args);
@@ -67,7 +73,6 @@ public class ArcadeMenu extends Application {
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
-		System.out.println(gamesFolder);
 
 		for (File file : gamesFolder.listFiles()) {
 			String name = file.getName();
@@ -82,13 +87,13 @@ public class ArcadeMenu extends Application {
 
 		games.removeAll(games.stream().filter(game -> game.image == null).collect(Collectors.toList()));
 
-//		player.setOnEndOfMedia(new Runnable() {
-//			public void run() {
-//				player = new MediaPlayer(loop);
-//				player.play();
-//			}
-//		});
-//		player.play();
+		//		player.setOnEndOfMedia(new Runnable() {
+		//			public void run() {
+		//				player = new MediaPlayer(loop);
+		//				player.play();
+		//			}
+		//		});
+		//		player.play();
 
 	}
 
@@ -99,6 +104,7 @@ public class ArcadeMenu extends Application {
 	@Override
 	public void start(Stage stage) {
 		layout = new Pane();
+		layout.getChildren().add(new ImageView("file:" + dataFolder.toURI().getPath() + "background.png"));
 
 		ArrayList<Element> initialList = new ArrayList<>(games);
 		while (games.size() < elementCount)
@@ -120,19 +126,19 @@ public class ArcadeMenu extends Application {
 
 		stage.setScene(scene);
 		//		scene.setCursor(Cursor.NONE);
-		//		 stage.setFullScreen(true);
+		//		stage.setFullScreen(true);
 		stage.setFullScreenExitHint("");
 		stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
 		//		stage.setOnCloseRequest(Event::consume);
-//		stage.focusedProperty().addListener(new ChangeListener<Boolean>() {
-//			@Override
-//			public void changed(ObservableValue<? extends Boolean> ov, Boolean t, Boolean t1) {
-//				if (t1)
-//					player.play();
-//				else
-//					player.pause();
-//			}
-//		});
+		//		stage.focusedProperty().addListener(new ChangeListener<Boolean>() {
+		//			@Override
+		//			public void changed(ObservableValue<? extends Boolean> ov, Boolean t, Boolean t1) {
+		//				if (t1)
+		//					player.play();
+		//				else
+		//					player.pause();
+		//			}
+		//		});
 
 		stage.show();
 
@@ -221,7 +227,7 @@ public class ArcadeMenu extends Application {
 
 		private Group group;
 		private Label text;
-		private ImageView image;
+		private ImageView image = new ImageView();
 
 		private String picture;
 		private String file;
@@ -242,16 +248,20 @@ public class ArcadeMenu extends Application {
 
 		private void putPicture(String picture) {
 			text = new Label(name);
-			text.setFont(new Font("Arial", 20));
+			text.setFont(new Font("Calibri", 20));
 			text.relocate(110, 10);
 			text.setOpacity(0.0);
 			this.picture = picture;
-			//System.out.println(gamesFolder.toURI().getPath() + picture);
 			try {
-				image = new ImageView("file:" + gamesFolder.toURI().getPath() + picture);
+				BufferedImage frame = ImageIO.read(new File(dataFolder, "frame.png"));
+				BufferedImage icon = ImageIO.read(new File(gamesFolder, picture));
+				Graphics2D g = frame.createGraphics();
+				g.drawImage(icon, frameWidth, frameWidth, null);
+				image.setImage(SwingFXUtils.toFXImage(frame, null));
 				image.setFitHeight(imageSize);
 				image.setFitWidth(imageSize);
 			} catch (Exception e) {
+				e.printStackTrace();
 			}
 			image.setAccessibleText(name);
 		}

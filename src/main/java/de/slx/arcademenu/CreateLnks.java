@@ -11,7 +11,7 @@ import javax.imageio.ImageIO;
 public class CreateLnks {
 
 	File mainFolder, dataFolder, gamesFolder;
-	int max = 255;
+	int max = 25;
 	String[] endings = { "st", "nd", "rd" };
 
 	public static void main(String[] args) {
