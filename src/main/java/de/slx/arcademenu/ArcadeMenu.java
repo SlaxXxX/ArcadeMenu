@@ -3,7 +3,7 @@ package de.slx.arcademenu;
 import javafx.application.Application;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.shape.ArcTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
@@ -30,9 +30,9 @@ public class ArcadeMenu extends Application {
 
 	File mainFolder, dataFolder, gamesFolder;
 	ArrayList<Element> games = new ArrayList<>();
-	StackPane layout;
+	Pane layout;
 
-	int[] angles = new int[] { -8, 7, 19, 35, 55, 67, 79, 91 };
+	int[] angles = new int[] { -8, 7, 19, 33, 55, 67, 79, 91 };
 	int pathFinished = 0;
 	int elementCount = 8;
 	int elementIndex = 0;
@@ -40,17 +40,12 @@ public class ArcadeMenu extends Application {
 	int duration = 150;
 	int climbingDuration = duration;
 	double climbSpeed = 0.97;
-	int minDelay = 50;
+	int minDelay = 30;
 	double scaleMain = 1.8;
 	int imageSize = 100;
 
 	final Dimension d = new Dimension(1024, 768);
 	final int radius = (int) (d.width / 4 * 2.5);
-
-	ScaleTransition upscaleTransition = new ScaleTransition();
-	ScaleTransition downscaleTransition = new ScaleTransition();
-	FadeTransition fadeinTransition = new FadeTransition();
-	FadeTransition fadeoutTransition = new FadeTransition();
 
 	public static void main(String[] args) {
 		launch(args);
@@ -85,18 +80,6 @@ public class ArcadeMenu extends Application {
 		//		 MediaPlayer player = new MediaPlayer(music);
 		//		 player.play();
 
-		fadeinTransition.setFromValue(0.0);
-		fadeinTransition.setToValue(1.0);
-		fadeoutTransition.setFromValue(1.0);
-		fadeoutTransition.setToValue(0.0);
-		upscaleTransition.setFromX(1);
-		upscaleTransition.setFromY(1);
-		upscaleTransition.setToX(scaleMain);
-		upscaleTransition.setToY(scaleMain);
-		downscaleTransition.setFromX(scaleMain);
-		downscaleTransition.setFromY(scaleMain);
-		downscaleTransition.setToX(1);
-		downscaleTransition.setToY(1);
 	}
 
 	private String strip(String s) {
@@ -105,7 +88,7 @@ public class ArcadeMenu extends Application {
 
 	@Override
 	public void start(Stage stage) {
-		layout = new StackPane();
+		layout = new Pane();
 
 		int oldSize = games.size();
 		for (int i = oldSize; i < elementCount; i++)
@@ -113,6 +96,7 @@ public class ArcadeMenu extends Application {
 
 		for (Element game : games) {
 			game.group = new Group(game.image, game.text);
+			game.setup();
 			layout.getChildren().add(game.group);
 		}
 
@@ -123,11 +107,11 @@ public class ArcadeMenu extends Application {
 			climbingDuration = duration;
 		});
 		stage.setScene(scene);
-		scene.setCursor(Cursor.NONE);
+		//		scene.setCursor(Cursor.NONE);
 		//		 stage.setFullScreen(true);
 		stage.setFullScreenExitHint("");
 		stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
-		stage.setOnCloseRequest(Event::consume);
+		//		stage.setOnCloseRequest(Event::consume);
 		stage.show();
 
 		games.get(getIndex(3)).scale = 1.8;
@@ -136,12 +120,7 @@ public class ArcadeMenu extends Application {
 			if (i < elementCount)
 				games.get((i + games.size() - 3) % games.size()).setPath(i, i * 150, 1000);
 		}
-		fadeinTransition.setNode(games.get(getIndex(3)).text);
-		fadeinTransition.setDuration(Duration.millis(1150));
-		fadeinTransition.play();
-		upscaleTransition.setNode(games.get(getIndex(3)).group);
-		upscaleTransition.setDuration(Duration.millis(1150));
-		upscaleTransition.play();
+		games.get(getIndex(3)).up(1150);
 	}
 
 	private int add(int num, int add, int max) {
@@ -172,18 +151,8 @@ public class ArcadeMenu extends Application {
 				games.get(getIndex(i)).setPath(i % elementCount, 0, climbingDuration);
 			}
 
-			fadeinTransition.setNode(games.get(getIndex(3)).text);
-			fadeoutTransition.setNode(games.get(getIndex(4)).text);
-			fadeinTransition.setDuration(Duration.millis(climbingDuration));
-			fadeoutTransition.setDuration(Duration.millis(climbingDuration));
-			fadeinTransition.play();
-			fadeoutTransition.play();
-			upscaleTransition.setNode(games.get(getIndex(3)).group);
-			downscaleTransition.setNode(games.get(getIndex(4)).group);
-			upscaleTransition.setDuration(Duration.millis(climbingDuration));
-			downscaleTransition.setDuration(Duration.millis(climbingDuration));
-			upscaleTransition.play();
-			downscaleTransition.play();
+			games.get(getIndex(3)).up(climbingDuration);
+			games.get(getIndex(4)).down(climbingDuration);
 
 			if (climbingDuration > minDelay)
 				climbingDuration *= climbSpeed;
@@ -200,18 +169,8 @@ public class ArcadeMenu extends Application {
 				games.get(getIndex(i)).setPath(i, 0, climbingDuration);
 			}
 
-			fadeinTransition.setNode(games.get(getIndex(3)).text);
-			fadeoutTransition.setNode(games.get(getIndex(2)).text);
-			fadeinTransition.setDuration(Duration.millis(climbingDuration));
-			fadeoutTransition.setDuration(Duration.millis(climbingDuration));
-			fadeinTransition.play();
-			fadeoutTransition.play();
-			upscaleTransition.setNode(games.get(getIndex(3)).group);
-			downscaleTransition.setNode(games.get(getIndex(2)).group);
-			upscaleTransition.setDuration(Duration.millis(climbingDuration));
-			downscaleTransition.setDuration(Duration.millis(climbingDuration));
-			upscaleTransition.play();
-			downscaleTransition.play();
+			games.get(getIndex(3)).up(climbingDuration);
+			games.get(getIndex(2)).down(climbingDuration);
 
 			if (climbingDuration > minDelay)
 				climbingDuration *= climbSpeed;
@@ -227,7 +186,17 @@ public class ArcadeMenu extends Application {
 	public void stop() {
 	}
 
+	//-------------------------------------------------------------------------------------//
+	//-------------------------------------------------------------------------------------//
+	//-------------------------------------------------------------------------------------//
+	
 	private class Element {
+
+		ScaleTransition upscaleTransition = new ScaleTransition();
+		ScaleTransition downscaleTransition = new ScaleTransition();
+		FadeTransition fadeinTransition = new FadeTransition();
+		FadeTransition fadeoutTransition = new FadeTransition();
+
 		private Group group;
 		private Label text;
 		private ImageView image;
@@ -263,6 +232,39 @@ public class ArcadeMenu extends Application {
 			} catch (Exception e) {
 			}
 			image.setAccessibleText(name);
+		}
+
+		private void setup() {
+			fadeinTransition.setFromValue(0.0);
+			fadeinTransition.setToValue(1.0);
+			fadeoutTransition.setFromValue(1.0);
+			fadeoutTransition.setToValue(0.0);
+			upscaleTransition.setFromX(1);
+			upscaleTransition.setFromY(1);
+			upscaleTransition.setToX(scaleMain);
+			upscaleTransition.setToY(scaleMain);
+			downscaleTransition.setFromX(scaleMain);
+			downscaleTransition.setFromY(scaleMain);
+			downscaleTransition.setToX(1);
+			downscaleTransition.setToY(1);
+			fadeinTransition.setNode(text);
+			fadeoutTransition.setNode(text);
+			upscaleTransition.setNode(group);
+			downscaleTransition.setNode(group);
+		}
+		
+		private void up(int duration) {
+			upscaleTransition.setDuration(Duration.millis(duration));
+			upscaleTransition.play();
+			fadeinTransition.setDuration(Duration.millis(duration));
+			fadeinTransition.play();
+		}
+		
+		private void down(int duration) {
+			downscaleTransition.setDuration(Duration.millis(duration));
+			downscaleTransition.play();
+			fadeoutTransition.setDuration(Duration.millis(duration));
+			fadeoutTransition.play();
 		}
 
 		private Point getLocal() {

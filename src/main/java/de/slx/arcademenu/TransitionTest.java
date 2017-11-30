@@ -5,12 +5,13 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.shape.*;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+@SuppressWarnings("restriction")
 public class TransitionTest extends Application {
 	Rectangle rect;
 
@@ -21,7 +22,7 @@ public class TransitionTest extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		rect = new Rectangle(100, 100);
-		StackPane pane = new StackPane(rect);
+		Pane pane = new Pane(rect);
 		Scene scene = new Scene(pane, 800, 800);
 		primaryStage.setScene(scene);
 
