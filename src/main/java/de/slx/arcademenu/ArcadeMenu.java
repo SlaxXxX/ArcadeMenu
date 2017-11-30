@@ -90,9 +90,10 @@ public class ArcadeMenu extends Application {
 	public void start(Stage stage) {
 		layout = new Pane();
 
-		int oldSize = games.size();
-		for (int i = oldSize; i < elementCount; i++)
-			games.add(new Element(games.get(i % oldSize)));
+		ArrayList<Element> initialList = new ArrayList<>(games);
+		while (games.size() < elementCount)
+			for(Element game : initialList)
+				games.add(new Element(game));
 
 		for (Element game : games) {
 			game.group = new Group(game.image, game.text);

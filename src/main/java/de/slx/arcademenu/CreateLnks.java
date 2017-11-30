@@ -11,7 +11,7 @@ import javax.imageio.ImageIO;
 public class CreateLnks {
 
 	File mainFolder, dataFolder, gamesFolder;
-	int max = 3;
+	int max = 255;
 	String[] endings = { "st", "nd", "rd" };
 
 	public static void main(String[] args) {
@@ -38,6 +38,7 @@ public class CreateLnks {
 		Arrays.asList(gamesFolder.listFiles()).forEach(File::delete);
 		//<!>
 
+		long before = System.currentTimeMillis();
 		for (int i = 1; i <= max; i++) {
 			String name = String.format("%03d", i) + endOrDefault(i) + " shade of grey";
 			try {
@@ -54,5 +55,6 @@ public class CreateLnks {
 				e.printStackTrace();
 			}
 		}
+		System.out.printf("Done in " + "%d.2" + " seconds.", (System.currentTimeMillis() - before)/1000);
 	}
 }
