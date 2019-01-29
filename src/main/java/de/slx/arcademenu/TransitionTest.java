@@ -46,14 +46,6 @@ public class TransitionTest extends Application {
 		PathTransition pathTransition = new PathTransition();
 
 		Path path = new Path();
-		
-		rect.relocate(500, 500);
-		rect.setX(100);
-		rect.setY(100);
-		rect.setLayoutX(rect.getTranslateX());
-		rect.setLayoutY(rect.getTranslateY());
-		rect.setTranslateX(0);
-		rect.setTranslateY(0);
 		path.getElements().add(new MoveTo(50 + rect.getTranslateX(), 50 + rect.getTranslateY()));
 
 		if (e.getCode() == KeyCode.UP)
