@@ -42,21 +42,27 @@ public class ArcadeMenu extends Application {
 
 	public static boolean debug = true;
 
-	int[] angles = new int[] { -8, 7, 19, 33, 55, 67, 79, 91 };
+	// int[] angles = new int[] { -8, 7, 19, 33, 55, 67, 79, 91 };
+
+	final int elementAngle = 12;
+	final int selectedExtraSpace = 10;
+	final int selectedIndex = 3;
+
 	int pathFinished = 0;
-	int elementCount = 8;
 	int elementIndex = 0;
+	final int elementCount = 8;
 
-	int duration = 150;
+	final int duration = 150;
 	int climbingDuration = duration;
-	double climbSpeed = 0.97;
-	int minDelay = 30;
-	double scaleMain = 1.8;
-	int imageSize = 90;
-	int frameWidth = 10;
+	final double climbSpeed = 0.97;
+	final int minDelay = 30;
+	final double scaleMain = 1.8;
+	final int imageSize = 90;
+	final int frameWidth = 10;
 
-	final Dimension d = new Dimension(1024, 768);
-	final int radius = (int) (d.width / 4 * 2.5);
+	Dimension screenDimension = new Dimension(1024, 768);
+	Point rotationCenter = new Point(0, screenDimension.height);
+	final float radius = 2.5f / 4;
 
 	Media loop, start;
 	MediaPlayer player;
@@ -112,7 +118,10 @@ public class ArcadeMenu extends Application {
 	@Override
 	public void start(Stage stage) {
 		layout = new Pane();
-		layout.getChildren().add(new ImageView("file:" + dataFolder.toURI().getPath() + "background.png"));
+		// layout.getChildren().add(new ImageView("file:" +
+		// dataFolder.toURI().getPath() + "background.png"));
+		layout.setStyle("-fx-background-image: url(" + "'" + dataFolder.toURI().getPath() + "background.png'" + "); "
+				+ "-fx-background-size: cover;");
 
 		ArrayList<Element> initialList = new ArrayList<>(games);
 		while (games.size() < elementCount)
@@ -125,7 +134,7 @@ public class ArcadeMenu extends Application {
 			layout.getChildren().add(game.group);
 		}
 
-		Scene scene = new Scene(layout, d.width, d.height);
+		Scene scene = new Scene(layout, 1024, 768);
 
 		scene.addEventFilter(KeyEvent.KEY_PRESSED, this::pressedKey);
 		scene.setOnKeyReleased(ke -> {
@@ -148,14 +157,30 @@ public class ArcadeMenu extends Application {
 		});
 
 		stage.show();
+		screenDimension = new Dimension((int) stage.getWidth(), (int) stage.getHeight());
+
+		ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> screenResized(stage);
+
+		stage.widthProperty().addListener(stageSizeListener);
+		stage.heightProperty().addListener(stageSizeListener);
 
 		games.get(getIndex(3)).scale = 1.8;
 		for (int i = 0; i < games.size(); i++) {
-			games.get((i + games.size() - 3) % games.size()).group.relocate(radius, d.height + imageSize / 2);
+			games.get((i + games.size() - 3) % games.size()).group.relocate(radius * screenDimension.width,
+					screenDimension.height + imageSize / 2);
 			if (i < elementCount)
 				games.get((i + games.size() - 3) % games.size()).setPath(i, i * 150, 1000);
 		}
 		games.get(getIndex(3)).up(1150);
+	}
+
+	private void screenResized(Stage stage) {
+		screenDimension = new Dimension((int) stage.getWidth(), (int) stage.getHeight());
+		rotationCenter = new Point(0, screenDimension.height);
+
+		for (int i = 0; i < elementCount - 1; i++) {
+			games.get(getIndex(i)).setPath(i, 0, climbingDuration);
+		}
 	}
 
 	private int add(int num, int add, int max) {
@@ -182,7 +207,7 @@ public class ArcadeMenu extends Application {
 			games.get(getIndex(4)).scale = 1.0;
 
 			games.get(getIndex(0)).setPath(0, 0, climbingDuration,
-					new Point(-imageSize / 2, (int) (d.height + imageSize / 2 - radius)));
+					new Point((int) (radius * screenDimension.width), (int) (screenDimension.height + imageSize / 2)));
 			for (int i = 1; i < elementCount; i++) {
 				games.get(getIndex(i)).setPath(i % elementCount, 0, climbingDuration);
 			}
@@ -201,7 +226,7 @@ public class ArcadeMenu extends Application {
 			games.get(getIndex(2)).scale = 1.0;
 
 			games.get(getIndex(elementCount - 1)).setPath(elementCount - 1, 0, climbingDuration,
-					new Point(radius, (int) (d.height + imageSize / 2)));
+					new Point((int) (radius * screenDimension.width), (int) (screenDimension.height + imageSize / 2)));
 			for (int i = 0; i < elementCount - 1; i++) {
 				games.get(getIndex(i)).setPath(i, 0, climbingDuration);
 			}
@@ -325,12 +350,16 @@ public class ArcadeMenu extends Application {
 		}
 
 		private Point getDelta(int pos) {
-			Point middle = new Point(getPos().x - radius, getPos().y);
+			int newAngle = pos * elementAngle
+					+ ((pos >= selectedIndex) ? selectedExtraSpace * ((pos > selectedIndex) ? 2 : 1) : 0);
 			Point stop = new Point(
-					middle.x + (int) (radius * Math.cos(Math.toRadians(270) + Math.toRadians(angles[pos]))),
-					middle.y + (int) (radius * Math.sin(Math.toRadians(270) + Math.toRadians(angles[pos]))));
-			return new Point(stop.x + (int) ((getWidth() * scale - getWidth()) / 2)
-					+ (int) ((getWidth() - imageSize / 2) / 2) - getPos().x, stop.y - getPos().y);
+					rotationCenter.x - (int) ((radius * screenDimension.width)
+							* Math.sin(Math.toRadians(360) - Math.toRadians(newAngle))),
+					rotationCenter.y - (int) ((radius * screenDimension.height)
+							* Math.cos(Math.toRadians(360) - Math.toRadians(newAngle))));
+			System.out.println("moving from " + getPos().x + "," + getPos().y + "\tto " + stop.x + "," + stop.y);
+			return new Point(stop.x - (int) ((getWidth() * scale) / 2) - getPos().x,
+					stop.y - (int) ((getWidth() * scale) / 2) - getPos().y);
 		}
 
 		private void setPath(int pos, int delay, int duration) {
@@ -345,7 +374,8 @@ public class ArcadeMenu extends Application {
 			path.getElements()
 					.add(new MoveTo(start.x - getPos().x + getLocal().x, start.y - getPos().y + getLocal().y));
 
-			ArcTo arcTo = new ArcTo(radius, radius, 0, delta.x, delta.y, false, false);
+			ArcTo arcTo = new ArcTo((radius * screenDimension.width), (radius * screenDimension.height), 0, delta.x,
+					delta.y, false, false);
 
 			path.getElements().add(arcTo);
 
